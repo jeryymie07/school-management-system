@@ -19,7 +19,7 @@
                   communication, and enhance administrative tasks effectively.
                 </p>
                 <div class="cta">
-                  <a href="login.php" class="btn">Get started</a>
+                  <a href="pre_register.php" class="btn">Enroll Now</a>
                 </div>
 
 

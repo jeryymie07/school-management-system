@@ -14,10 +14,29 @@
     
     <ul class="side-menu main-side-board">
         <li><a href="dashboard.php"><i class='bx bxs-dashboard'></i>Dashboard</a></li>
-        <li><a href="teacher.php"><i class='bx bxs-user-rectangle'></i>Teacher</a></li>
+        <li class="dropdown">
+            <a href="javascript:void(0)" class="dropdown-toggle" data-bs-toggle="dropdown"><i class='bx bxs-dashboard'></i>Academics</a>
+            <ul class="dropdown-menu">
+                <li><a href="school_year.php"><i class='bx bx-calendar'></i>School Year</a></li>
+                <li><a href="curriculum.php"><i class='bx bx-revision'></i>Curriculum</a></li>
+                <li><a href="grade_level.php"><i class='bx bxs-user-rectangle'></i>Grade Level</a></li>
+        <li><a href="rooms.php"><i class='bx bxs-user-rectangle'></i>Rooms</a></li>
+            </ul>
+        </li>
         <li><a href="student.php"><i class='bx bxs-user-detail'></i>Student</a></li>
+        <li><a href="teacher.php"><i class='bx bxs-user-rectangle'></i>Teacher</a></li>
+        <li class="dropdown">
+            <a href="javascript:void(0)" class="dropdown-toggle" data-bs-toggle="dropdown"><i class='bx bxs-user-detail'></i>Assign</a>
+            <ul class="dropdown-menu">
+                <li><a href="assign_grade_level_to_subject.php"><i class='bx bx-list-check'></i>Grade Level to Subjects</a></li>
+                <li><a href="assign_grade_level_to_rooms.php"><i class='bx bx-list-check'></i>Grade Level to Rooms</a></li>
+                <li><a href="assign_teacher_to_rooms.php"><i class='bx bx-list-check'></i>Teacher to Rooms</a></li>
+            </ul>
+        </li>
         <li><a href="subjects.php"><i class='bx bx-book-bookmark'></i>Subjects</a></li>
+        <li><a href="schedule.php"><i class='bx bx-calendar-event'></i>Schedule</a></li>
         <li><a href="attendence.php"><i class='bx bx-list-check'></i>Attendence</a></li>
+        <li><a href="payment.php"><i class='bx bx-file-blank'></i>Payment</a></li>
         <li><a href="noticeboard.php"><i class='bx bx-bookmark'></i>Notice Board</a></li>
         <li><a href="timetable.php"><i class='bx bx-table'></i>Time Table</a></li>
         <li><a href="syllabus.php"><i class='bx bx-file-blank'></i>Syllabus</a></li>
