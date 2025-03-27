@@ -1,158 +1,122 @@
 <?php include('partials/_header.php') ?>
 
-<!-- confirm edit alert modal-->
-<div class="modal fade" id="edit-confirmation-modal" tabindex="-1" aria-labelledby="exampleModalLabel"
-    aria-hidden="true">
-    <div class="modal-dialog  modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-            </div>
-            <div class="modal-body">
-                <strong>Do you really want to Edit this Subject?</strong>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-danger" id="confirm-edit-btn">Edit</button>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- end of onfirm edit alert modal-->
-
-<!-- alert to delete subject  -->
-<div class="modal fade" id="delete-confirmation-modal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog  modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-            </div>
-            <div class="modal-body">
-                <strong>Do you really want to delete this Subject?</strong>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-danger" onclick="deleteSubject()">Delete</button>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- end of alert to delete subject -->
-
-<!-- add subject modal-->
-<div class="modal modal-md" style="z-index: 2000;" id="add-subject" tabindex="-1" aria-labelledby="exampleModalLabel"
-    aria-hidden="true">
+<!-- Add Subject Modal -->
+<div class="modal modal-md" style="z-index: 2000;" id="add-subject" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
-                <h1 class="modal-title fs-5" id="exampleModalLabel">Add Subject</h1>
-                <button type="button" class="close mr-2" data-bs-dismiss="modal" aria-label="Close"><i
-                        class='bx bx-x'></i></button>
+                <h1 class="modal-title fs-5">Add Subject</h1>
+                <button type="button" class="close mr-2" data-bs-dismiss="modal" aria-label="Close"><i class='bx bx-x'></i></button>
             </div>
             <form class="needs-validation" id="create-subject-form" novalidate>
                 <div class="modal-body">
                     <div class="container my-3">
+                        <div class="mb-3">
+                            <label for="subject-code" class="form-label">Subject Code</label>
+                            <input type="text" class="form-control" name="subject_code" id="subject-code" required>
+                            <div class="invalid-feedback">This field can't be empty!</div>
+                        </div>
 
                         <div class="mb-3">
-                            <label for="class" class="form-label">Class</label>
-                            <select class="form-select" aria-label="Default select example" name="class" id="class"
-                                required>
-                                <!-- <option selected disabled value="">--select--</option>
-                                <option>12</option>
-                                <option>11</option>
-                                <option>10</option>
-                                <option>9</option>
-                                <option>8</option>
-                                <option>7</option>
-                                <option>6</option>
-                                <option>5</option>
-                                <option>4</option>
-                                <option>3</option>
-                                <option>2</option>
-                                <option>1</option>
-                                <option>pg</option>
-                                <option>lkg</option>
-                                <option>ukg</option> -->
+                            <label for="subject-name" class="form-label">Subject Name</label>
+                            <input type="text" class="form-control" name="subject_name" id="newSubjectName" required>
+                            <div class="invalid-feedback">This field can't be empty!</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description (Optional)</label>
+                            <textarea class="form-control" name="description" id="description"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="class" class="form-label">Grade Level</label>
+                            <select class="form-select" name="class" id="class" required>
                                 <?php include('partials/select_classes.php') ?>
                             </select>
-                            <div class="invalid-feedback">
-                                Please select class.
-                            </div>
+                            <div class="invalid-feedback">Please select grade level.</div>
                         </div>
 
                         <div class="mb-3">
-                            <label for="subject" class="form-label">Subject Name</label>
-                            <input type="text" class="form-control" name="subject" id="newSubjectName"
-                                aria-describedby="emailHelp" required>
-                            <div class="invalid-feedback">
-                                This field can't be empty!
-                            </div>
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" name="status" id="status" required>
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                            </select>
+                            <div class="invalid-feedback">Please select status.</div>
                         </div>
-
                     </div>
                 </div>
                 <div class="modal-footer">
-
                     <button type="button" class="btn btn-primary" id="add-subject-btn">
-                        <div><i class='bx bx-book-add'></i>&nbsp;&nbsp;<span>Add</span></div>
+                        <i class='bx bx-book-add'></i>&nbsp;&nbsp;<span>Add</span>
                     </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-<!-- end of upload syllabus label-->
 
-<!-- edit uploaded notes -->
-<div class="modal modal-md" style="z-index: 2000;" id="edit-subject" tabindex="-1" aria-labelledby="exampleModalLabel"
-    aria-hidden="true">
+<!-- Edit Subject Modal -->
+<div class="modal modal-md" style="z-index: 2000;" id="edit-subject" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
-                <h1 class="modal-title fs-5" id="exampleModalLabel">Edit Subject</h1>
-                <button type="button" class="close mr-2" data-bs-dismiss="modal" aria-label="Close"><i
-                        class='bx bx-x'></i></button>
+                <h1 class="modal-title fs-5">Edit Subject</h1>
+                <button type="button" class="close mr-2" data-bs-dismiss="modal" aria-label="Close"><i class='bx bx-x'></i></button>
             </div>
             <form class="needs-validation" id="editSubjectForm" novalidate>
-            <div class="modal-body">
-                <div class="container my-3">
+                <div class="modal-body">
+                    <div class="container my-3">
+                        <input type="hidden" id="edit-subject-id">
 
+                        <div class="mb-3">
+                            <label for="edit-subject-code" class="form-label">Subject Code</label>
+                            <input type="text" class="form-control" id="edit-subject-code" name="subject_code" required>
+                        </div>
 
+                        <div class="mb-3">
+                            <label for="subject-edited-name" class="form-label">Subject Name</label>
+                            <input type="text" class="form-control" id="subject-edited-name" name="subject" required>
+                        </div>
 
+                        <div class="mb-3">
+                            <label for="edit-description" class="form-label">Description</label>
+                            <textarea class="form-control" id="edit-description" name="description"></textarea>
+                        </div>
 
-                    <div class="mb-3">
-                        <label for="subject" class="form-label">Subject Name</label>
-                        <input type="text" class="form-control" id="subject-edited-name"  name="subject" aria-describedby="emailHelp" required>
-                        <div class="invalid-feedback">
-                                Please select class.
-                            </div>
+                        <div class="mb-3">
+                            <label for="edit-class" class="form-label">Grade Level</label>
+                            <select class="form-select" name="class" id="edit-class" required>
+                                <?php include('partials/select_classes.php') ?>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="edit-status" class="form-label">Status</label>
+                            <select class="form-select" name="status" id="edit-status" required>
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                            </select>
+                        </div>
                     </div>
-
                 </div>
-            </div>
-            <div class="modal-footer">
-
-                <button type="button" class="btn btn-primary" id="save-new-subject-name">
-                    <div><span>Save</span></div>
-                </button>
-
-            </div>
-        </form>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="save-new-subject-name">
+                        <span>Save</span>
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
-<!-- end of edit uploaded notes-->
+
 <!-- Sidebar -->
 <?php include('partials/_sidebar.php') ?>
-<input type="hidden" value="4" id="checkFileName">
-<!-- End of Sidebar -->
-
-
 
 <!-- Main Content -->
 <div class="content">
     <!-- Navbar -->
     <?php include("partials/_navbar.php"); ?>
-
-    <!-- End of Navbar -->
 
     <main>
         <div class="header">
@@ -160,133 +124,43 @@
                 <h1>Subjects</h1>
             </div>
         </div>
+
         <div class="bottom-data">
-
             <div class="orders">
-                <!-- Tab panes -->
-                <div class="tab-content">
-
-                    <div class="tab-pane active" id="profile" role="tabpanel" aria-labelledby="profile-tab"
-                        tabindex="0">
-                        <div class="showAttendence">
-                            <br>
-                            <div class="header">
-                                <i class='bx bx-receipt'></i>
-                                <h3>Subjects </h3>
-                                <a href="#" class="add" data-bs-toggle="modal" data-bs-target="#add-subject"
-                                    onclick="removeValidations()">
-                                    <i class='bx bx-plus'></i>
-                                    <span>Add</span>
-                                </a>
-                            </div>
-
-                            <hr><br>
-                            <div class="container" style="display: flex;">
-
-                                <div class="row g-3 align-items-center">
-                                    <div class="col-auto">
-                                        <label for="class" class="col-form-label">Class </label>
-                                    </div>
-                                    <div class="col-auto">
-                                        <select class="form-select" aria-label="Default select example" name="class"
-                                            id="search-class">
-                                            <!--<option selected>12</option>-->
-                                            <!--<option>11</option>-->
-                                            <!--<option>10</option>-->
-                                            <!--<option>9</option>-->
-                                            <!--<option>8</option>-->
-                                            <!--<option>7</option>-->
-                                            <!--<option>6</option>-->
-                                            <!--<option>5</option>-->
-                                            <!--<option>4</option>-->
-                                            <!--<option>3</option>-->
-                                            <!--<option>2</option>-->
-                                            <!--<option>1</option>-->
-                                            <!--<option>pg</option>-->
-                                            <!--<option>lkg</option>-->
-                                            <!--<option>ukg</option>-->
-                                            <?php include('partials/select_classes.php') ?>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                            <br>
-                            <div class="container">
-                                <a class="find" id="find-btn">
-                                <i class='bx bx-search-alt'></i>
-                                    <span>Find</span>
-                                </a>
-                            </div>
-
-
-                            <hr class="text-danger">
-
-                            <div class="container">
-                                <br>
-                                <!-- Take attendence -->
-                                <div class="attendenceTable" style="display: block;">
-                                    <div class="header">
-                                        <i class='bx bx-list-ul'></i>
-                                        <h3 id="subject-table-header">Class 12 Subjects</h3>
-
-
-
-
-
-                                    </div>
-
-                                    <hr class="text-danger">
-                                    <!--table-->
-                                    <div class="students-table subject-table">
-                                        <table>
-                                            <thead>
-                                                <tr>
-                                                    <th scope="col" class="thead col-4">#</th>
-                                                    <th scope="col" class="thead col-5">Subject</th>
-                                                    <th scope="col" class="thead col-3">Action</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="subject-table-body">
-
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    <!--END table-->
-                                    <div id="dataNotAvailable">
-
-                                        <div class="_flex-container box-hide">
-
-                                            <div class="no-data-box">
-                                                <div class="no-dataicon">
-                                                    <i class='bx bx-data'></i>
-                                                </div>
-                                                <p>No Data</p>
-                                            </div>
-                                        </div>
-
-                                    </div>
-                                </div>
-
-
-
-                            </div>
-
-                            <hr class="text-danger">
+                <div class="header">
+                    <i class='bx bx-book-reader'></i>
+                    <h3>Subject List</h3>
+                    <div class="student-btns">
+                        <div class="dropdown dropdown-center">
+                            <a class="notif" data-bs-toggle="dropdown" aria-expanded="false" id="dropDownListForSubmit">
+                                <i class='bx bx-filter'></i>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" id="add_subject_dropdown" data-bs-toggle="modal" data-bs-target="#add-subject">Add Subject</a></li>
+                            </ul>
                         </div>
                     </div>
-
-
                 </div>
-
+                <hr>
+                <div class="students-table">
+                    <?php
+                        $sql = "SELECT * FROM subjects";
+                        $result = $conn->query($sql);
+                        if ($result->num_rows > 0) {
+                            echo "<table class='table table-hover'><thead><tr><th>#</th><th>Subject Code</th><th>Subject Name</th><th>Description</th><th>Grade Level</th><th>Status</th></tr></thead><tbody>";
+                            $counter = 1;
+                            while($row = $result->fetch_assoc()) {
+                                echo "<tr><td>".$counter."</td><td>".$row['subject_code']."</td><td>".$row['subject']."</td><td>".$row['description']."</td><td>".$row['class']."</td><td>".$row['status']."</td></tr>";
+                                $counter++;
+                            }
+                            echo "</tbody></table>";
+                        }
+                    ?>
+                </div>
             </div>
-
-
         </div>
-
     </main>
-
 </div>
-
 
 <script src="../assets/js/subjects.js"></script>
 <?php include('partials/_footer.php'); ?>

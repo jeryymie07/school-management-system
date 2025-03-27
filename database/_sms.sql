@@ -162,6 +162,41 @@ CREATE TABLE `classes` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `curriculums`
+--
+
+CREATE TABLE `curriculums` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `curriculum_name` varchar(255) NOT NULL,
+  `description` text NOT NULL,
+  `school_year` varchar(10) NOT NULL,
+  `grade_levels` varchar(255) NOT NULL,
+  `status` varchar(20) NOT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `curriculum_subjects`
+--
+
+CREATE TABLE `curriculum_subjects` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `curriculum_id` int(11) NOT NULL,
+  `subject_name` varchar(255) NOT NULL,
+  `subject_code` varchar(50) NOT NULL,
+  `units` int(11) NOT NULL,
+  `subject_type` varchar(50) NOT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`curriculum_id`) REFERENCES `curriculums`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `exams`
 --
 
@@ -648,6 +683,19 @@ ALTER TABLE `classes`
   ADD PRIMARY KEY (`s_no`);
 
 --
+-- Indexes for table `curriculums`
+--
+ALTER TABLE `curriculums`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `curriculum_subjects`
+--
+ALTER TABLE `curriculum_subjects`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `curriculum_id` (`curriculum_id`);
+
+--
 -- Indexes for table `exams`
 --
 ALTER TABLE `exams`
@@ -796,6 +844,18 @@ ALTER TABLE `classes`
   MODIFY `s_no` int(10) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `curriculums`
+--
+ALTER TABLE `curriculums`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `curriculum_subjects`
+--
+ALTER TABLE `curriculum_subjects`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `exams`
 --
 ALTER TABLE `exams`
@@ -902,6 +962,16 @@ ALTER TABLE `time_table`
 --
 ALTER TABLE `users`
   MODIFY `s_no` int(15) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `curriculum_subjects`
+--
+ALTER TABLE `curriculum_subjects`
+  ADD CONSTRAINT `curriculum_subjects_ibfk_1` FOREIGN KEY (`curriculum_id`) REFERENCES `curriculums` (`id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

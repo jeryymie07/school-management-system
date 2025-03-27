@@ -1,290 +1,247 @@
-<?php include("partials/_navbar.php"); ?>
-        <?php include("partials/_sidebar.php"); ?>
+<?php
+// Handle API requests
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+
+    switch ($action) {
+        case 'add':
+            try {
+                $stmt = $conn->prepare("INSERT INTO curriculums (curriculum_name, description, school_year, grade_levels, status) VALUES (?, ?, ?, ?, ?)");
+                $stmt->bind_param("sssss", 
+                    $_POST['curriculum_name'],
+                    $_POST['description'],
+                    $_POST['school_year'],
+                    $_POST['grade_levels'],
+                    $_POST['status']
+                );
+                $stmt->execute();
+                
+                $curriculum_id = $conn->insert_id;
+                
+                // Insert subjects
+                if (isset($_POST['subjects'])) {
+                    $subjects = json_decode($_POST['subjects']);
+                    foreach ($subjects as $subject) {
+                        $stmt = $conn->prepare("INSERT INTO curriculum_subjects (curriculum_id, name, code, units, type) VALUES (?, ?, ?, ?, ?)");
+                        $stmt->bind_param("issss", 
+                            $curriculum_id,
+                            $subject->name,
+                            $subject->code,
+                            $subject->units,
+                            $subject->type
+                        );
+                        $stmt->execute();
+                    }
+                }
+                
+                echo json_encode(['success' => true, 'message' => 'Curriculum added successfully']);
+            } catch (Exception $e) {
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            }
+            exit;
+
+        case 'edit':
+            try {
+                $stmt = $conn->prepare("UPDATE curriculums SET curriculum_name=?, description=?, school_year=?, grade_levels=?, status=? WHERE id=?");
+                $stmt->bind_param("sssssi", 
+                    $_POST['edit_curriculum_name'],
+                    $_POST['edit_description'],
+                    $_POST['edit_school_year'],
+                    $_POST['edit_grade_levels'],
+                    $_POST['edit_status'],
+                    $_POST['edit_curriculum_id']
+                );
+                $stmt->execute();
+                
+                // Delete existing subjects
+                $stmt = $conn->prepare("DELETE FROM curriculum_subjects WHERE curriculum_id = ?");
+                $stmt->bind_param("i", $_POST['edit_curriculum_id']);
+                $stmt->execute();
+                
+                // Insert new subjects
+                if (isset($_POST['edit_subjects'])) {
+                    $subjects = json_decode($_POST['edit_subjects']);
+                    foreach ($subjects as $subject) {
+                        $stmt = $conn->prepare("INSERT INTO curriculum_subjects (curriculum_id, name, code, units, type) VALUES (?, ?, ?, ?, ?)");
+                        $stmt->bind_param("issss", 
+                            $_POST['edit_curriculum_id'],
+                            $subject->name,
+                            $subject->code,
+                            $subject->units,
+                            $subject->type
+                        );
+                        $stmt->execute();
+                    }
+                }
+                
+                echo json_encode(['success' => true, 'message' => 'Curriculum updated successfully']);
+            } catch (Exception $e) {
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            }
+            exit;
+
+        case 'fetch':
+            try {
+                $result = $conn->query("
+                    SELECT c.*, GROUP_CONCAT(CONCAT(s.name, ' (', s.code, ')')) as subjects 
+                    FROM curriculums c 
+                    LEFT JOIN curriculum_subjects s ON c.id = s.curriculum_id 
+                    GROUP BY c.id 
+                    ORDER BY c.id DESC
+                ");
+                
+                $data = [];
+                while ($row = $result->fetch_assoc()) {
+                    $data[] = $row;
+                }
+                
+                echo json_encode($data);
+            } catch (Exception $e) {
+                echo json_encode(['error' => $e->getMessage()]);
+            }
+            exit;
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Curriculum Management</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .container {
-            width: 80%;
-            margin: auto;
-            overflow: hidden;
-        }
-        .header {
-            background: #333;
-            color: white;
-            padding: 20px;
-            text-align: center;
-        }
-        .nav-tabs {
-            display: flex;
-            list-style: none;
-            padding: 0;
-            background: #444;
-        }
-        .nav-tabs li {
-            flex: 1;
-        }
-        .nav-tabs button {
-            width: 100%;
-            padding: 15px;
-            border: none;
-            background: #444;
-            color: white;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        .nav-tabs button.active {
-            background: #666;
-        }
-        .tab-content {
-            background: white;
-            padding: 20px;
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-        }
-        .table-container {
-            width: 100%;
-            overflow-x: auto;
-        }
-        .form-container {
-            background: white;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        .subject-table {
-            margin-top: 20px;
-        }
-    </style>
+    <?php include_once('./partials/_header.php'); ?>
 </head>
 <body>
+    <?php include_once('./partials/_navbar.php'); ?>
 
-    <!-- Main Content -->
-    <div class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <?php include('partials/_sidebar.php'); ?>
 
-        <div class="container">
-            <div class="header">
-                <h1>Curriculum Management</h1>
-            </div>
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Curriculum Management</h1>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCurriculumModal">
+                        <i class='bx bx-plus'></i> Add Curriculum
+                    </button>
+                </div>
 
-            <ul class="nav-tabs">
-                <li><button class="tab-btn active" data-tab="add-curriculum">Add Curriculum</button></li>
-                <li><button class="tab-btn" data-tab="show-curriculum">Show Curriculums</button></li>
-            </ul>
+                <div class="table-responsive">
+                    <table class="table table-striped table-sm">
+                        <thead>
+                            <tr>
+                                <th>Curriculum Name</th>
+                                <th>Description</th>
+                                <th>School Year</th>
+                                <th>Grade Levels</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="curriculum-table-body">
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
 
-            <div id="add-curriculum" class="tab-content active">
-                <div class="form-container">
-                    <h3>Add New Curriculum</h3>
-                    <form id="add-curriculum-form" method="POST" action="process_curriculum.php">
-                        <input type="hidden" name="add_curriculum" value="1">
+    <!-- Add Curriculum Modal -->
+    <div class="modal fade" id="addCurriculumModal" tabindex="-1" aria-labelledby="addCurriculumModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addCurriculumModalLabel">Add New Curriculum</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="curriculum-form">
                         <div class="mb-3">
-                            <label for="curriculum_code">Curriculum Code</label>
-                            <input type="text" class="form-control" id="curriculum_code" name="curriculum_code" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="curriculum_name">Curriculum Name</label>
+                            <label for="curriculum_name" class="form-label">Curriculum Name</label>
                             <input type="text" class="form-control" id="curriculum_name" name="curriculum_name" required>
                         </div>
                         <div class="mb-3">
-                            <label for="educational_level">Educational Level</label>
-                            <select class="form-select" id="educational_level" name="educational_level" required>
-                                <option value="">Select Level</option>
-                                <option value="Elementary">Elementary</option>
-                                <option value="Junior High">Junior High</option>
-                                <option value="Senior High">Senior High</option>
-                                <option value="College">College</option>
-                            </select>
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
                         </div>
                         <div class="mb-3">
-                            <label for="academic_year">Academic Year</label>
-                            <input type="text" class="form-control" id="academic_year" name="academic_year" required>
+                            <label for="school_year" class="form-label">School Year</label>
+                            <input type="text" class="form-control" id="school_year" name="school_year" required>
                         </div>
                         <div class="mb-3">
-                            <label for="department">Department</label>
-                            <input type="text" class="form-control" id="department" name="department" required>
+                            <label for="grade_levels" class="form-label">Grade Levels</label>
+                            <input type="text" class="form-control" id="grade_levels" name="grade_levels" required>
                         </div>
                         <div class="mb-3">
-                            <label for="status">Status</label>
+                            <label for="status" class="form-label">Status</label>
                             <select class="form-select" id="status" name="status" required>
                                 <option value="Active">Active</option>
                                 <option value="Inactive">Inactive</option>
                             </select>
                         </div>
-                        <button type="submit" class="btn btn-primary">Add Curriculum</button>
+                        <div class="mb-3">
+                            <button type="button" class="btn btn-primary" id="add-subject-btn">
+                                <i class='bx bx-plus'></i> Add Subject
+                            </button>
+                        </div>
+                        <div id="subjects-container" class="mb-3"></div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">Save Curriculum</button>
+                        </div>
                     </form>
-                </div>
-            </div>
-
-            <div id="show-curriculum" class="tab-content">
-                <h3>Curriculums</h3>
-                <div class="table-container">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Curriculum Code</th>
-                                <th>Name</th>
-                                <th>Level</th>
-                                <th>Academic Year</th>
-                                <th>Department</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php while ($row = $curriculums->fetch_assoc()): ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars($row['id']); ?></td>
-                                    <td><?php echo htmlspecialchars($row['curriculum_code']); ?></td>
-                                    <td><?php echo htmlspecialchars($row['curriculum_name']); ?></td>
-                                    <td><?php echo htmlspecialchars($row['educational_level']); ?></td>
-                                    <td><?php echo htmlspecialchars($row['academic_year']); ?></td>
-                                    <td><?php echo htmlspecialchars($row['department']); ?></td>
-                                    <td><?php echo htmlspecialchars($row['status']); ?></td>
-                                    <td>
-                                        <a href="edit_curriculum.php?id=<?php echo $row['id']; ?>" class="btn btn-warning btn-sm">Edit</a>
-                                        <a href="delete_curriculum.php?id=<?php echo $row['id']; ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?');">Delete</a>
-                                    </td>
-                                </tr>
-                            <?php endwhile; ?>
-                        </tbody>
-                    </table>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-        document.querySelectorAll(".tab-btn").forEach(button => {
-            button.addEventListener("click", function () {
-                document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
-                document.querySelectorAll(".tab-content").forEach(tab => tab.classList.remove("active"));
+    <!-- Edit Curriculum Modal -->
+    <div class="modal fade" id="editCurriculumModal" tabindex="-1" aria-labelledby="editCurriculumModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editCurriculumModalLabel">Edit Curriculum</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="edit-curriculum-form">
+                        <input type="hidden" id="edit_curriculum_id" name="edit_curriculum_id">
+                        <div class="mb-3">
+                            <label for="edit_curriculum_name" class="form-label">Curriculum Name</label>
+                            <input type="text" class="form-control" id="edit_curriculum_name" name="edit_curriculum_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit_description" class="form-label">Description</label>
+                            <textarea class="form-control" id="edit_description" name="edit_description" rows="3" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit_school_year" class="form-label">School Year</label>
+                            <input type="text" class="form-control" id="edit_school_year" name="edit_school_year" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit_grade_levels" class="form-label">Grade Levels</label>
+                            <input type="text" class="form-control" id="edit_grade_levels" name="edit_grade_levels" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit_status" class="form-label">Status</label>
+                            <select class="form-select" id="edit_status" name="edit_status" required>
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                            </select>
+                        </div>
+                        <div id="edit-subjects-container" class="mb-3"></div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">Update Curriculum</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                this.classList.add("active");
-                document.getElementById(this.dataset.tab).classList.add("active");
-            });
-        });
-    </script>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <?php include('partials/_footer.php'); ?>
+    <script src="../assets/js/curriculum.js"></script>
 </body>
 </html>
-
-<?php include('partials/_footer.php'); ?>
-<?php
-include('partials/_header.php');
-include('partials/_sidebar.php');
-include('db_connection.php');
-
-// Add new curriculum
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_curriculum'])) {
-    $curriculum_code = $_POST['curriculum_code'];
-    $curriculum_name = $_POST['curriculum_name'];
-    $educational_level = $_POST['educational_level'];
-    $academic_year = $_POST['academic_year'];
-    $department = $_POST['department'];
-    $status = $_POST['status'];
-    $created_at = date('Y-m-d H:i:s');
-    $updated_at = date('Y-m-d H:i:s');
-
-    $sql = "INSERT INTO curriculums (
-        curriculum_code, curriculum_name, educational_level, academic_year, 
-        department, status, created_at, updated_at
-    ) VALUES (
-        '$curriculum_code', '$curriculum_name', '$educational_level', 
-        '$academic_year', '$department', '$status', '$created_at', '$updated_at'
-    )";
-
-    if ($conn->query($sql) === TRUE) {
-        echo "<script>alert('New curriculum added successfully'); window.location.href='curriculum.php';</script>";
-    } else {
-        echo "<script>alert('Error: " . $conn->error . "');</script>";
-    }
-}
-
-// Add new subject
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_subject'])) {
-    $curriculum_id = $_POST['curriculum_id'];
-    $subject_code = $_POST['subject_code'];
-    $subject_name = $_POST['subject_name'];
-    $description = $_POST['description'];
-    $units = $_POST['units'];
-    $prerequisite = $_POST['prerequisite'];
-    $semester = $_POST['semester'];
-    $grade_level = $_POST['grade_level'];
-    $created_at = date('Y-m-d H:i:s');
-    $updated_at = date('Y-m-d H:i:s');
-
-    $sql = "INSERT INTO subjects (
-        curriculum_id, subject_code, subject_name, description, units, 
-        prerequisite, semester, grade_level, created_at, updated_at
-    ) VALUES (
-        '$curriculum_id', '$subject_code', '$subject_name', '$description', 
-        '$units', '$prerequisite', '$semester', '$grade_level', 
-        '$created_at', '$updated_at'
-    )";
-
-    if ($conn->query($sql) === TRUE) {
-        echo "<script>alert('New subject added successfully'); window.location.href='curriculum.php';</script>";
-    } else {
-        echo "<script>alert('Error: " . $conn->error . "');</script>";
-    }
-}
-
-// Update curriculum
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_curriculum'])) {
-    $id = $_POST['id'];
-    $curriculum_code = $_POST['curriculum_code'];
-    $curriculum_name = $_POST['curriculum_name'];
-    $educational_level = $_POST['educational_level'];
-    $academic_year = $_POST['academic_year'];
-    $department = $_POST['department'];
-    $status = $_POST['status'];
-    $updated_at = date('Y-m-d H:i:s');
-
-    $sql = "UPDATE curriculums SET 
-        curriculum_code='$curriculum_code', 
-        curriculum_name='$curriculum_name', 
-        educational_level='$educational_level', 
-        academic_year='$academic_year', 
-        department='$department', 
-        status='$status', 
-        updated_at='$updated_at' 
-        WHERE id=$id";
-
-    if ($conn->query($sql) === TRUE) {
-        echo "<script>alert('Curriculum updated successfully'); window.location.href='curriculum.php';</script>";
-    } else {
-        echo "<script>alert('Error: " . $conn->error . "');</script>";
-    }
-}
-
-// Delete curriculum
-if (isset($_GET['delete_curriculum'])) {
-    $id = $_GET['delete_curriculum'];
-    $sql = "DELETE FROM curriculums WHERE id=$id";
-    
-    if ($conn->query($sql) === TRUE) {
-        echo "<script>alert('Curriculum deleted successfully'); window.location.href='curriculum.php';</script>";
-    } else {
-        echo "<script>alert('Error: " . $conn->error . "');</script>";
-    }
-}
-
-// Get all curriculums
-$sql = "SELECT * FROM curriculums ORDER BY id DESC";
-$curriculums = $conn->query($sql);
-
-// Get all subjects for a specific curriculum
-if (isset($_GET['curriculum_id'])) {
-    $curriculum_id = $_GET['curriculum_id'];
-    $sql = "SELECT * FROM subjects WHERE curriculum_id = $curriculum_id ORDER BY grade_level, semester";
-    $subjects = $conn->query($sql);
-}
-?>
